@@ -22,9 +22,9 @@ AZURE_EMBED_DEPLOY_NAME: # text embed model deployment name
 ############### DiLu settings ############
 reflection_module: False # True or False
 few_shot_num: 0 # 0 for zero-shot
-episodes_num: 30 # run episodes
+episodes_num: 10 # run episodes
 memory_path: "memories/20_mem"
-result_folder: "exp/benchmark/"
+result_folder: "exp/benchmark_original/"
 
 ############ Highway-env config ############
 simulation_duration: 30 # step

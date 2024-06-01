@@ -5,7 +5,11 @@ import os
 
 from highway_env.road.road import Road, RoadNetwork, LaneIndex
 from highway_env.road.lane import (
-    StraightLane, CircularLane, SineLane, PolyLane, PolyLaneFixedWidth
+    StraightLane,
+    CircularLane,
+    SineLane,
+    PolyLane,
+    PolyLaneFixedWidth,
 )
 from highway_env.envs.common.abstract import AbstractEnv
 from highway_env.vehicle.controller import MDPVehicle
@@ -16,35 +20,28 @@ from dilu.scenario.DBBridge import DBBridge
 from dilu.scenario.envPlotter import ScePlotter
 
 
-ACTIONS_ALL = {
-    0: 'LANE_LEFT',
-    1: 'IDLE',
-    2: 'LANE_RIGHT',
-    3: 'FASTER',
-    4: 'SLOWER'
-}
+ACTIONS_ALL = {0: "LANE_LEFT", 1: "IDLE", 2: "LANE_RIGHT", 3: "FASTER", 4: "SLOWER"}
 
 ACTIONS_DESCRIPTION = {
-    0: 'Turn-left - change lane to the left of the current lane',
-    1: 'IDLE - remain in the current lane with current speed',
-    2: 'Turn-right - change lane to the right of the current lane',
-    3: 'Acceleration - accelerate the vehicle',
-    4: 'Deceleration - decelerate the vehicle'
+    0: "Turn-left - change lane to the left of the current lane",
+    1: "IDLE - remain in the current lane with current speed",
+    2: "Turn-right - change lane to the right of the current lane",
+    3: "Acceleration - accelerate the vehicle",
+    4: "Deceleration - decelerate the vehicle",
 }
 
 
 class EnvScenario:
     def __init__(
-            self, env: AbstractEnv, envType: str,
-            seed: int, database: str = None
+        self, env: AbstractEnv, envType: str, seed: int, database: str = None
     ) -> None:
         self.env = env
         self.envType = envType
 
         self.ego: MDPVehicle = env.vehicle
         # 下面的四个变量用来判断车辆是否在 ego 的危险视距内
-        self.theta1 = math.atan(3/17.5)
-        self.theta2 = math.atan(2/2.5)
+        self.theta1 = math.atan(3 / 17.5)
+        self.theta2 = math.atan(2 / 2.5)
         self.radius1 = np.linalg.norm([3, 17.5])
         self.radius2 = np.linalg.norm([2, 2.5])
 
@@ -55,9 +52,9 @@ class EnvScenario:
         if database:
             self.database = database
         else:
-            self.database = datetime.strftime(
-                datetime.now(), '%Y-%m-%d_%H-%M-%S'
-            ) + '.db'
+            self.database = (
+                datetime.strftime(datetime.now(), "%Y-%m-%d_%H-%M-%S") + ".db"
+            )
 
         if os.path.exists(self.database):
             os.remove(self.database)
@@ -70,9 +67,11 @@ class EnvScenario:
 
     def getSurrendVehicles(self, vehicles_count: int) -> List[IDMVehicle]:
         return self.road.close_vehicles_to(
-            self.ego, self.env.PERCEPTION_DISTANCE,
-            count=vehicles_count-1, see_behind=True,
-            sort='sorted'
+            self.ego,
+            self.env.PERCEPTION_DISTANCE,
+            count=vehicles_count - 1,
+            see_behind=True,
+            sort="sorted",
         )
 
     def plotSce(self, fileName: str) -> None:
@@ -80,12 +79,10 @@ class EnvScenario:
         self.plotter.plotSce(self.network, SVs, self.ego, fileName)
 
     def getUnitVector(self, radian: float) -> Tuple[float]:
-        return (
-            math.cos(radian), math.sin(radian)
-        )
+        return (math.cos(radian), math.sin(radian))
 
     def isInJunction(self, vehicle: Union[IDMVehicle, MDPVehicle]) -> float:
-        if self.envType == 'intersection-v1':
+        if self.envType == "intersection-v1":
             x, y = vehicle.position
             # 这里交叉口的范围是 -12~12, 这里是为了保证车辆可以检测到交叉口内部的信息
             # 这个时候车辆需要提前减速
@@ -100,19 +97,18 @@ class EnvScenario:
         currentLaneIdx = vehicle.lane_index
         currentLane = self.network.get_lane(currentLaneIdx)
         if not isinstance(currentLane, StraightLane):
-            raise ValueError(
-                "The vehicle is in a junction, can't get lane position"
-            )
+            raise ValueError("The vehicle is in a junction, can't get lane position")
         else:
             currentLane = self.network.get_lane(vehicle.lane_index)
             return np.linalg.norm(vehicle.position - currentLane.start)
 
     def availableActionsDescription(self) -> str:
-        avaliableActionDescription = 'Your available actions are: \n'
+        avaliableActionDescription = "Your available actions are: \n"
         availableActions = self.env.get_available_actions()
         for action in availableActions:
-            avaliableActionDescription += ACTIONS_DESCRIPTION[action] + ' Action_id: ' + str(
-                action) + '\n'
+            avaliableActionDescription += (
+                ACTIONS_DESCRIPTION[action] + " Action_id: " + str(action) + "\n"
+            )
         # if 1 in availableActions:
         #     avaliableActionDescription += 'You should check IDLE action as FIRST priority. '
         # if 0 in availableActions or 2 in availableActions:
@@ -128,7 +124,9 @@ class EnvScenario:
         sideLanes = self.network.all_side_lanes(lidx)
         numLanes = len(sideLanes)
         if numLanes == 1:
-            description = "You are driving on a road with only one lane, you can't change lane. "
+            description = (
+                "You are driving on a road with only one lane, you can't change lane. "
+            )
         else:
             egoLaneRank = lidx[2]
             if egoLaneRank == 0:
@@ -136,11 +134,7 @@ class EnvScenario:
             elif egoLaneRank == numLanes - 1:
                 description = f"You are driving on a road with {numLanes} lanes, and you are currently driving in the rightmost lane. "
             else:
-                laneRankDict = {
-                    1: 'second',
-                    2: 'third',
-                    3: 'fourth'
-                }
+                laneRankDict = {1: "second", 2: "third", 3: "fourth"}
                 description = f"You are driving on a road with {numLanes} lanes, and you are currently driving in the {laneRankDict[egoLaneRank]} lane from the left. "
 
         description += f"Your current position is `({self.ego.position[0]:.2f}, {self.ego.position[1]:.2f})`, speed is {self.ego.speed:.2f} m/s, acceleration is {self.ego.action['acceleration']:.2f} m/s^2, and lane position is {self.getLanePosition(self.ego):.2f} m.\n"
@@ -153,13 +147,11 @@ class EnvScenario:
         #       的，向量只能用来判断车辆在 ego 的前方还是后方
         relativePosition = sv.position - self.ego.position
         egoUnitVector = self.getUnitVector(self.ego.heading)
-        cosineValue = sum(
-            [x*y for x, y in zip(relativePosition, egoUnitVector)]
-        )
+        cosineValue = sum([x * y for x, y in zip(relativePosition, egoUnitVector)])
         if cosineValue >= 0:
-            return 'is ahead of you'
+            return "is ahead of you"
         else:
-            return 'is behind of you'
+            return "is behind of you"
 
     def getVehDis(self, veh: IDMVehicle):
         posA = self.ego.position
@@ -187,7 +179,7 @@ class EnvScenario:
             behindSVs = []
             for sv in SingleLaneSVs:
                 RSStr = self.getSVRelativeState(sv)
-                if RSStr == 'is ahead of you':
+                if RSStr == "is ahead of you":
                     aheadSVs.append(sv)
                 else:
                     behindSVs.append(sv)
@@ -197,15 +189,13 @@ class EnvScenario:
         else:
             return None, None
 
-    def processSVsNormalLane(
-            self, SVs: List[IDMVehicle], currentLaneIndex: LaneIndex
-    ):
+    def processSVsNormalLane(self, SVs: List[IDMVehicle], currentLaneIndex: LaneIndex):
         # 目前 description 中的车辆有些太多了，需要处理一下，只保留最靠近 ego 的几辆车
         classifiedSVs: Dict[str, List[IDMVehicle]] = {
-            'current lane': [],
-            'left lane': [],
-            'right lane': [],
-            'target lane': []
+            "current lane": [],
+            "left lane": [],
+            "right lane": [],
+            "target lane": [],
         }
         sideLanes = self.network.all_side_lanes(currentLaneIndex)
         nextLane = self.network.next_lane(
@@ -215,17 +205,17 @@ class EnvScenario:
             lidx = sv.lane_index
             if lidx in sideLanes:
                 if lidx == currentLaneIndex:
-                    classifiedSVs['current lane'].append(sv)
+                    classifiedSVs["current lane"].append(sv)
                 else:
                     laneRelative = lidx[2] - currentLaneIndex[2]
                     if laneRelative == 1:
-                        classifiedSVs['right lane'].append(sv)
+                        classifiedSVs["right lane"].append(sv)
                     elif laneRelative == -1:
-                        classifiedSVs['left lane'].append(sv)
+                        classifiedSVs["left lane"].append(sv)
                     else:
                         continue
             elif lidx == nextLane:
-                classifiedSVs['target lane'].append(sv)
+                classifiedSVs["target lane"].append(sv)
             else:
                 continue
 
@@ -263,7 +253,7 @@ class EnvScenario:
             SVDescription = "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
             return SVDescription
         else:
-            SVDescription = ''
+            SVDescription = ""
             for sv in surroundVehicles:
                 lidx = sv.lane_index
                 if lidx in sideLanes:
@@ -299,7 +289,7 @@ class EnvScenario:
                         continue
                 else:
                     continue
-                if self.envType == 'intersection-v1':
+                if self.envType == "intersection-v1":
                     SVDescription += f"The position of it is `({sv.position[0]:.2f}, {sv.position[1]:.2f})`, speed is {sv.speed:.2f} m/s, acceleration is {sv.action['acceleration']:.2f} m/s^2.\n"
                 else:
                     SVDescription += f"The position of it is `({sv.position[0]:.2f}, {sv.position[1]:.2f})`, speed is {sv.speed:.2f} m/s, acceleration is {sv.action['acceleration']:.2f} m/s^2, and lane position is {self.getLanePosition(sv):.2f} m.\n"
@@ -307,7 +297,7 @@ class EnvScenario:
                 descriptionPrefix = "There are other vehicles driving around you, and below is their basic information:\n"
                 return descriptionPrefix + SVDescription
             else:
-                SVDescription = 'There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n'
+                SVDescription = "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
                 return SVDescription
 
     def isInDangerousArea(self, sv: IDMVehicle) -> bool:
@@ -315,9 +305,7 @@ class EnvScenario:
         distance = np.linalg.norm(relativeVector)
         egoUnitVector = self.getUnitVector(self.ego.heading)
         relativeUnitVector = relativeVector / distance
-        alpha = np.arccos(
-            np.clip(np.dot(egoUnitVector, relativeUnitVector), -1, 1)
-        )
+        alpha = np.arccos(np.clip(np.dot(egoUnitVector, relativeUnitVector), -1, 1))
         if alpha <= self.theta1:
             if distance <= self.radius1:
                 return True
@@ -342,7 +330,7 @@ class EnvScenario:
             SVDescription = "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
             return SVDescription
         else:
-            SVDescription = ''
+            SVDescription = ""
             for sv in surroundVehicles:
                 lidx = sv.lane_index
                 if self.isInJunction(sv):
@@ -366,7 +354,7 @@ class EnvScenario:
                 descriptionPrefix = "There are other vehicles driving around you, and below is their basic information:\n"
                 return descriptionPrefix + SVDescription
             else:
-                'There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n'
+                "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
                 return SVDescription
 
     def describe(self, decisionFrame: int) -> str:
@@ -374,7 +362,9 @@ class EnvScenario:
         self.dbBridge.insertVehicle(decisionFrame, surroundVehicles)
         currentLaneIndex: LaneIndex = self.ego.lane_index
         if self.isInJunction(self.ego):
-            roadCondition = "You are driving in an intersection, you can't change lane. "
+            roadCondition = (
+                "You are driving in an intersection, you can't change lane. "
+            )
             roadCondition += f"Your current position is `({self.ego.position[0]:.2f}, {self.ego.position[1]:.2f})`, speed is {self.ego.speed:.2f} m/s, and acceleration is {self.ego.action['acceleration']:.2f} m/s^2.\n"
             SVDescription = self.describeSVJunctionLane(currentLaneIndex)
         else:
@@ -384,10 +374,17 @@ class EnvScenario:
         return roadCondition + SVDescription
 
     def promptsCommit(
-        self, decisionFrame: int, vectorID: str, done: bool,
-        description: str, fewshots: str, thoughtsAndAction: str
+        self,
+        decisionFrame: int,
+        vectorID: str,
+        done: bool,
+        description: str,
+        fewshots: str,
+        thoughtsAndAction: str,
     ):
         self.dbBridge.insertPrompts(
-            decisionFrame, vectorID, done, description,
-            fewshots, thoughtsAndAction
+            decisionFrame, vectorID, done, description, fewshots, thoughtsAndAction
         )
+
+    def getPosition(self):
+        return self.ego.position[0]
