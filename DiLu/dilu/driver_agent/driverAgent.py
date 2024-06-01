@@ -108,8 +108,8 @@ class DriverAgent:
         """
         )
 
+        fewshot_bottom_message = "\nAbove messages are some examples of how you make a decision successfully in the past. Those scenarios are similar to the current scenario. You should refer to those examples to make a decision for the current scenario. \n"
         human_message = f"""\
-        Above messages are some examples of how you make a decision successfully in the past. Those scenarios are similar to the current scenario. You should refer to those examples to make a decision for the current scenario. 
 
         Here is the current scenario:
         {delimiter} Driving scenario description:
@@ -121,6 +121,8 @@ class DriverAgent:
 
         You can stop reasoning once you have a valid action to take. 
         """
+        if len(fewshot_messages) > 0:
+            human_message = fewshot_bottom_message + human_message
         human_message = human_message.replace("        ", "")
 
         if fewshot_messages is None:

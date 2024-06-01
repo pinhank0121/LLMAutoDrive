@@ -117,7 +117,9 @@ if __name__ == '__main__':
         docs = []
         collision_frame = -1
 
+
         try:
+            initial_position = final_position = sce.getPosition()
             already_decision_steps = 0
             for i in range(0, config["simulation_duration"]):
                 obs = np.array(obs, dtype=float)
@@ -150,7 +152,7 @@ if __name__ == '__main__':
                     scenario_description=sce_descrip, available_actions=avail_action,
                     previous_decisions=action,
                     fewshot_messages=fewshot_messages,
-                    driving_intensions="Drive safely and avoid collisons",
+                    driving_intensions="I’m in a hurry, drive swiftly and avoid collisions.",
                     fewshot_answers=fewshot_answers,
                 )
                 docs.append({
@@ -163,6 +165,8 @@ if __name__ == '__main__':
 
                 obs, reward, done, info, _ = env.step(action)
                 already_decision_steps += 1
+                final_position = sce.getPosition()
+                print("Distance: ", final_position - initial_position)
 
                 env.render()
                 sce.promptsCommit(i, None, done, human_question,
@@ -177,9 +181,12 @@ if __name__ == '__main__':
                     break
         finally:
 
+            distance = final_position - initial_position
+            avg_speed = distance / already_decision_steps
             with open(result_folder + "/" + 'log.txt', 'a') as f:
                 f.write(
-                    "Simulation {} | Seed {} | Steps: {} | File prefix: {} \n".format(episode, seed, already_decision_steps, result_prefix))
+                    "Simulation {} | Seed {} | Steps: {} | Distance: {} | Avg_speed: {} | File prefix: {} \n".format(episode, seed,  already_decision_steps, distance, avg_speed, result_prefix)
+                )
                 
             if REFLECTION:
                 print("[yellow]Now running reflection agent...[/yellow]")

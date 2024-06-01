@@ -8,9 +8,7 @@ from rich import print
 
 
 class ReflectionAgent:
-    def __init__(
-        self, temperature: float = 0.0, verbose: bool = False
-    ) -> None:
+    def __init__(self, temperature: float = 0.0, verbose: bool = False) -> None:
         oai_api_type = os.getenv("OPENAI_API_TYPE")
         if oai_api_type == "azure":
             print("Using Azure Chat API")
@@ -31,11 +29,11 @@ class ReflectionAgent:
                 max_tokens=1000,
                 request_timeout=60,
             )
-                    
 
     def reflection(self, human_message: str, llm_response: str) -> str:
         delimiter = "####"
-        system_message = textwrap.dedent(f"""\
+        system_message = textwrap.dedent(
+            f"""\
         You are ChatGPT, a large language model trained by OpenAI. Now you act as a mature driving assistant, who can give accurate and correct advice for human driver in complex urban driving scenarios.
         You will be given a detailed description of the driving scenario of current frame along with the available actions allowed to take. 
 
@@ -46,8 +44,10 @@ class ReflectionAgent:
         Response to user:{delimiter} <only output one `Action_id` as a int number of you decision, without any action name or explanation. The output decision must be unique and not ambiguous, for example if you decide to decelearate, then output `4`> 
 
         Make sure to include {delimiter} to separate every step.
-        """)
-        human_message = textwrap.dedent(f"""\
+        """
+        )
+        human_message = textwrap.dedent(
+            f"""\
             ``` Human Message ```
             {human_message}
             ``` ChatGPT Response ```
@@ -62,7 +62,8 @@ class ReflectionAgent:
             <Your answer>
             {delimiter} Corrected version of ChatGPT response:
             <Your corrected version of ChatGPT response>
-        """)
+        """
+        )
 
         print("Self-reflection is running, make take time...")
         start_time = time.time()
@@ -71,12 +72,14 @@ class ReflectionAgent:
             HumanMessage(content=human_message),
         ]
         response = self.llm(messages)
-        target_phrase = f"{delimiter} What should ChatGPT do to avoid such errors in the future:"
-        substring = response.content[response.content.find(
-            target_phrase)+len(target_phrase):].strip()
+        target_phrase = (
+            f"{delimiter} What should ChatGPT do to avoid such errors in the future:"
+        )
+        substring = response.content[
+            response.content.find(target_phrase) + len(target_phrase) :
+        ].strip()
         corrected_memory = f"{delimiter} I have made a misake before and below is my self-reflection:\n{substring}"
-        print("Reflection done. Time taken: {:.2f}s".format(
-            time.time() - start_time))
+        print("Reflection done. Time taken: {:.2f}s".format(time.time() - start_time))
         print("corrected_memory:", corrected_memory)
 
         return corrected_memory
