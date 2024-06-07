@@ -18,7 +18,8 @@ if config['OPENAI_API_TYPE'] == 'azure':
     os.environ["AZURE_EMBED_DEPLOY_NAME"] = config['AZURE_EMBED_DEPLOY_NAME']
 elif config['OPENAI_API_TYPE'] == 'openai':
     os.environ["OPENAI_API_TYPE"] = config['OPENAI_API_TYPE']
-    os.environ["OPENAI_API_KEY"] = config['OPENAI_KEY']
+    #os.environ["OPENAI_API_KEY"] = config['OPENAI_KEY']
+    os.environ["OPENAI_API_KEY"] = os.getenv('OPENAI_API_KEY_DILU', '')
     os.environ["OPENAI_CHAT_MODEL"] = config['OPENAI_CHAT_MODEL']
 else:
     raise ValueError("Unknown OPENAI_API_TYPE, should be azure or openai")

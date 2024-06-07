@@ -3,7 +3,9 @@ import numpy as np
 from typing import List
 from highway_env.envs import AbstractEnv
 from highway_env.road.road import RoadNetwork, LaneIndex
-from highway_env.road.lane import StraightLane, CircularLane
+from highway_env.road.lane import (
+    StraightLane, CircularLane, SineLane, PolyLane, PolyLaneFixedWidth
+)
 from highway_env.vehicle.controller import MDPVehicle
 from highway_env.vehicle.behavior import IDMVehicle
 
@@ -116,6 +118,19 @@ class DBBridge:
                                 ) VALUES (?,?,?,?,?,?,?);""",
                             (
                                 k1, k2, k3, "CircularLane",
+                                wayPoint, lane.width, lane.speed_limit
+                            )
+                        )
+                    elif isinstance(lane, SineLane):
+                        wayPoint = f'{lane.start[0]},{lane.start[1]} {lane.end[0]},{lane.end[1]}'
+                        cur.execute(
+                            """INSERT INTO networkINFO (
+                                laneIndexO, laneIndexD, laneIndexI, laneType, 
+                                wayPoint, width, speedLimit
+                                ) VALUES (?,?,?,?,?,?,?);""",
+                            (
+                                k1, k2, k3,
+                                "SineLane",
                                 wayPoint, lane.width, lane.speed_limit
                             )
                         )

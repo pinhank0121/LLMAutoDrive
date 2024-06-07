@@ -64,7 +64,45 @@ def setup_env(config):
             "scaling": 5,
             'initial_lane_id': None,
             "ego_spacing": 4,
+        },
+        'roundabout-v0':
+        {
+            "observation": {
+                "type": "Kinematics",
+                "features": ["presence", "x", "y", "vx", "vy"],
+                "absolute": True,
+                "normalize": False,
+                "vehicles_count": config["vehicle_count"],
+                "vehicles_density": config["vehicles_density"],
+                "see_behind": True,
+            },
+            "action": {
+                "type": "DiscreteMetaAction",
+                "target_speeds": np.linspace(5, 32, 9),
+            },
+            # "incoming_vehicle_destination": None,
+            # "duration": 11, # [s] If the environment runs for 11 seconds and still hasn't done(vehicle is crashed), it will be truncated. "Second" is expressed as the variable "time", equal to "the number of calls to the step method" / policy_frequency.
+            # "simulation_frequency": 15,  # [Hz]
+            # "policy_frequency": 1,  # [Hz]
+            # "other_vehicles_type": "highway_env.vehicle.behavior.IDMVehicle",
+            # "screen_width": 600,  # [px] width of the pygame window
+            # "screen_height": 600,  # [px] height of the pygame window
+            # "centering_position": [0.5, 0.6],  # The smaller the value, the more southeast the displayed area is. K key and M key can change centering_position[0].
+            # "scaling": 5.5,
+            # "show_trajectories": False,
+            # "render_agent": True,
+            # "offscreen_rendering": False
+            "lanes_count": 2,
+            "other_vehicles_type": config["other_vehicle_type"],
+            "duration": config["simulation_duration"],
+            "vehicles_density": config["vehicles_density"],
+            "show_trajectories": True,
+            "render_agent": True,
+            "scaling": 5,
+            'initial_lane_id': None,
+            "ego_spacing": 4,
         }
+
     }
 
     return env_config
@@ -85,7 +123,7 @@ if __name__ == '__main__':
         os.makedirs(result_folder)
     with open(result_folder + "/" + 'log.txt', 'w') as f:
         f.write("memory_path {} | result_folder {} | few_shot_num: {} | lanes_count: {} \n".format(
-            memory_path, result_folder, few_shot_num, env_config['highway-v0']['lanes_count']))
+            memory_path, result_folder, few_shot_num, env_config[config['envType']]['lanes_count'])) #change envtype
 
     agent_memory = DrivingMemory(db_path=memory_path)
     if REFLECTION:
@@ -95,10 +133,11 @@ if __name__ == '__main__':
     episode = 0
     while episode < config["episodes_num"]:
         # setup highway-env
-        envType = 'highway-v0'
+        #envType = 'highway-v0'
+        envType = config["envType"]
         env = gym.make(envType, render_mode="rgb_array")
         env.configure(env_config[envType])
-        result_prefix = f"highway_{episode}"
+        result_prefix = f"{envType}_{episode}"
         env = RecordVideo(env, result_folder, name_prefix=result_prefix)
         env.unwrapped.set_record_video_wrapper(env)
         seed = random.choice(test_list_seed)

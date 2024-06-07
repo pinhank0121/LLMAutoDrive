@@ -69,12 +69,14 @@ class EnvScenario:
         self.dbBridge.insertNetwork()
 
     def getSurrendVehicles(self, vehicles_count: int) -> List[IDMVehicle]:
+
         return self.road.close_vehicles_to(
             self.ego, self.env.PERCEPTION_DISTANCE,
             count=vehicles_count-1, see_behind=True,
             sort='sorted'
         )
-
+    def IDLEDescription(self) ->str:
+        return "There are no other vehicles driving near you, but you should maintain a resonable speed and reach the destination as soon as possible.\n"
     def plotSce(self, fileName: str) -> None:
         SVs = self.getSurrendVehicles(10)
         self.plotter.plotSce(self.network, SVs, self.ego, fileName)
@@ -99,13 +101,19 @@ class EnvScenario:
     def getLanePosition(self, vehicle: Union[IDMVehicle, MDPVehicle]) -> float:
         currentLaneIdx = vehicle.lane_index
         currentLane = self.network.get_lane(currentLaneIdx)
-        if not isinstance(currentLane, StraightLane):
+        if isinstance(currentLane, StraightLane):
+            currentLane = self.network.get_lane(vehicle.lane_index)
+            return np.linalg.norm(vehicle.position - currentLane.start)
+        elif isinstance(currentLane, CircularLane):
+            currentLane = self.network.get_lane(vehicle.lane_index)
+            return np.linalg.norm(vehicle.position)
+        elif isinstance(currentLane, SineLane):
+            currentLane = self.network.get_lane(vehicle.lane_index)
+            return np.linalg.norm(vehicle.position - currentLane.start)
+        else:
             raise ValueError(
                 "The vehicle is in a junction, can't get lane position"
             )
-        else:
-            currentLane = self.network.get_lane(vehicle.lane_index)
-            return np.linalg.norm(vehicle.position - currentLane.start)
 
     def availableActionsDescription(self) -> str:
         avaliableActionDescription = 'Your available actions are: \n'
@@ -160,6 +168,7 @@ class EnvScenario:
             return 'is ahead of you'
         else:
             return 'is behind of you'
+        #watchout!!!
 
     def getVehDis(self, veh: IDMVehicle):
         posA = self.ego.position
@@ -260,16 +269,22 @@ class EnvScenario:
             surroundVehicles, currentLaneIndex
         )
         if not surroundVehicles:
-            SVDescription = "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
-            return SVDescription
+            #SVDescription = f"nextLane is {nextLane}, currentLane is {currentLaneIndex}"
+            #SVDescription += "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
+            return self.IDLEDescription()
         else:
             SVDescription = ''
+            #SVDescription += f"nextLane is {nextLane}, currentLane is {currentLaneIndex}"
+            # for SD in sideLanes:
+            #     SVDescription += f"SideLanes is {SD}, "
             for sv in surroundVehicles:
+                #SVDescription += f"Vehicle {sv} is driving in {sv.lane_index}. "
                 lidx = sv.lane_index
                 if lidx in sideLanes:
                     # 车辆和 ego 在同一条 road 上行驶
                     if lidx == currentLaneIndex:
                         # 车辆和 ego 在同一条 lane 上行驶
+                        SVDescription += "ON THE SAME LANE"
                         if sv in validVehicles:
                             SVDescription += f"- Vehicle `{id(sv) % 1000}` is driving on the same lane as you and {self.getSVRelativeState(sv)}. "
                         else:
@@ -297,6 +312,11 @@ class EnvScenario:
                         SVDescription += f"- Vehicle `{id(sv) % 1000}` is driving on your target lane and {self.getSVRelativeState(sv)}. "
                     else:
                         continue
+                elif self.network.is_leading_to_road(lidx, currentLaneIndex, False) or self.network.is_leading_to_road(currentLaneIndex, lidx, False):
+                    # on the road
+                    SVDescription += f"- Vehicle `{id(sv) % 1000}` is driving on the same road and ahead of you. "
+                elif lidx[1] == currentLaneIndex[1]:
+                    SVDescription += f"- Vehicle `{id(sv) % 1000}` is driving on your target lane and should pass first. "
                 else:
                     continue
                 if self.envType == 'intersection-v1':
@@ -307,8 +327,8 @@ class EnvScenario:
                 descriptionPrefix = "There are other vehicles driving around you, and below is their basic information:\n"
                 return descriptionPrefix + SVDescription
             else:
-                SVDescription = 'There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n'
-                return SVDescription
+                #SVDescription += "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
+                return self.IDLEDescription()
 
     def isInDangerousArea(self, sv: IDMVehicle) -> bool:
         relativeVector = sv.position - self.ego.position
@@ -339,8 +359,8 @@ class EnvScenario:
         )
         surroundVehicles = self.getSurrendVehicles(6)
         if not surroundVehicles:
-            SVDescription = "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
-            return SVDescription
+            #SVDescription += "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
+            return self.IDLEDescription()
         else:
             SVDescription = ''
             for sv in surroundVehicles:
@@ -366,11 +386,15 @@ class EnvScenario:
                 descriptionPrefix = "There are other vehicles driving around you, and below is their basic information:\n"
                 return descriptionPrefix + SVDescription
             else:
-                'There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n'
-                return SVDescription
+                #SVDescription += "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
+                return self.IDLEDescription()
 
     def describe(self, decisionFrame: int) -> str:
         surroundVehicles = self.getSurrendVehicles(10)
+        # check vehicles:
+        vehicleCondition = f"Perception is {self.env.PERCEPTION_DISTANCE}. "
+        for sv in surroundVehicles:
+            vehicleCondition += f"vehicle {sv}, "
         self.dbBridge.insertVehicle(decisionFrame, surroundVehicles)
         currentLaneIndex: LaneIndex = self.ego.lane_index
         if self.isInJunction(self.ego):
@@ -381,6 +405,7 @@ class EnvScenario:
             roadCondition = self.processNormalLane(currentLaneIndex)
             SVDescription = self.describeSVNormalLane(currentLaneIndex)
 
+        #return vehicleCondition+ roadCondition + SVDescription
         return roadCondition + SVDescription
 
     def promptsCommit(

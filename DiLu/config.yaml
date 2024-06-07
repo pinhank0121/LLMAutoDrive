@@ -8,7 +8,7 @@ OPENAI_API_TYPE: 'openai'
 # OPENAI_CHAT_MODEL: 'gpt-4-1106-preview' # Alternative models: 'gpt-3.5-turbo-16k-0613' (note: performance may vary)
 # OPENAI_CHAT_MODEL: 'gpt-3.5-turbo-0125'
 OPENAI_CHAT_MODEL: ''
-OPENAI_SELF_HOST_SOURCE: 'http://localhost:8000/v1'
+OPENAI_SELF_HOST_SOURCE: 'http://localhost:8003/v1'
 
 # OPENAI_API_TYPE: 'llama'
 # LLAMA_MODEL_PATH: '/tmp2/pinhank/.cache/huggingface/hub/models--TheBloke--Llama-2-7b-Chat-GGUF/snapshots/191239b3e26b2882fb562ffccdd1cf0f65402adb/llama-2-7b-chat.Q4_K_M.gguf'
@@ -23,12 +23,13 @@ AZURE_EMBED_DEPLOY_NAME: # text embed model deployment name
 ############### DiLu settings ############
 reflection_module: False # True or False
 few_shot_num: 0 # 0 for zero-shot
-episodes_num: 1 # run episodes
+episodes_num: 5 # run episodes
 memory_path: 'memories/20_mem'
-result_folder: 'results'
+result_folder: 'results_testing_lane_4_density_5.0'
 
 ############ Highway-env config ############
-simulation_duration: 5 # step
-vehicle_count: 15
+simulation_duration: 20 # step
+vehicle_count: 30
 other_vehicle_type: "highway_env.vehicle.behavior.IDMVehicle" #other types are: "highway_env.vehicle.behavior.DefensiveVehicle" or "highway_env.vehicle.behavior.AggressiveVehicle"
-vehicles_density: 2.0
+vehicles_density: 5.0
+envType: 'roundabout-v0' # roundabout-v0, highway-v0
