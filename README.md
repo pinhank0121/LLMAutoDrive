@@ -12,4 +12,4 @@ This research project explores the capabilities of Large Language Model (LLM) dr
 
 3. We developed a rule base algorithm agent and prompts inspired by rule-based principles.
 
-4. We implemented Dilu in other simulation environments not covered by the paper for future exploration.
+4. We implemented Dilu in the 'roundabout' environment, which is not covered by the original paper. (See branch roundabout).
