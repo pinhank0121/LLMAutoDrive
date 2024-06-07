@@ -1,4 +1,4 @@
-# Exploring LLM Capabilities in Autonomous Driving Simulation
+# Exploring LLM Capabilities in Autonomous Driving Simulation (CSIE 5452 Final Project)
 
 The original implementation is from [DiLu🐴: A Knowledge-Driven Approach to Autonomous Driving with Large Language Models](https://github.com/PJLab-ADG/DiLu).
 
@@ -12,4 +12,4 @@ This research project explores the capabilities of Large Language Model (LLM) dr
 
 3. We developed a rule base algorithm agent and prompts inspired by rule-based principles.
 
-4. We implemented \texttt{Dilu} in other simulation environments not covered by the paper for future exploration.
+4. We implemented Dilu in other simulation environments not covered by the paper for future exploration.
