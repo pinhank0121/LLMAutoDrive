@@ -10,4 +10,6 @@ This research project explores the capabilities of Large Language Model (LLM) dr
 
 2. Based on these observations, we attempted to address these issues through prompt engineering and few-shot in-context learning. 
 
-3. We explored Dilu in other simulation environments not covered by the paper.
+3. We developed a rule base algorithm agent and prompts inspired by rule-based principles.
+
+4. We implemented \texttt{Dilu} in other simulation environments not covered by the paper for future exploration.
